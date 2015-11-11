@@ -1,3 +1,3 @@
 cd ./code
 javac *.java
-java MainMeun
+java MainMenu

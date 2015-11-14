@@ -109,14 +109,17 @@ public class AdminMenu
 			catch(IOException e)
 			{
 				
-			}				
+			}
+				
+				System.out.print("Processing...");
 				loadData(inPath);
 				
 			}
 			else if(input.equals("4"))
 			{	
 				//show numer
-				System.out.println("show number");
+				//System.out.println("show number");
+				countTable();
 			}
 			else if(input.equals("5"))
 			{
@@ -141,7 +144,7 @@ public class AdminMenu
 	System.out.println("3. Load from datafile");
 	System.out.println("4. Show number of records in each table");
 	System.out.println("5. Return to the main menu");
-	System.out.print("Enter your Choice: ");
+	System.out.print("Enter Your Choice: ");
 	}
 	//run the sql
 	private static void execute(String sql)
@@ -171,18 +174,150 @@ public class AdminMenu
 	//loaddata
 	private static void loadData(String path)
 	{
+	
 	try{
-	BufferedReader inFile = new BufferedReader(new FileReader(new File(path+"/part.txt")));
-	System.out.println("./"+path+"/part.txt");
-	String d1 = null;
-	//line by line
-	while ((d1 = inFile.readLine()) != null)
+	//connect first
+	Connection conn = DriverManager.getConnection(
+	"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
+	"d019",
+	"xysqchsz");
+	BufferedReader inFile1 = new BufferedReader(new FileReader(new File(path+"/category.txt")));
+	BufferedReader inFile2 = new BufferedReader(new FileReader(new File(path+"/manufacturer.txt")));
+	BufferedReader inFile3 = new BufferedReader(new FileReader(new File(path+"/part.txt")));
+	BufferedReader inFile4 = new BufferedReader(new FileReader(new File(path+"/salesperson.txt")));
+	BufferedReader inFile5 = new BufferedReader(new FileReader(new File(path+"/transaction.txt")));
+	String indata = null;
+	//line by line category
+	while ((indata = inFile1.readLine()) != null)
 	{
-	//System.out.println(d1);
+	String[] tokens = null;
+	tokens = indata.split("\t");
+	//System.out.print(tokens[0]+" "); testing haha
+	//System.out.println(tokens[1]);
+	PreparedStatement pstmt = conn.prepareStatement(
+	"INSERT INTO category VALUES(?,?)");
+	pstmt.setString(1, tokens[0]);
+	pstmt.setString(2, tokens[1]);
+	pstmt.executeUpdate();	
 	}
+	// manufacturer
+	while ((indata = inFile2.readLine()) != null)
+	{
+	String[] tokens = null;
+	tokens = indata.split("\t");
+	//System.out.print(tokens[0]+" "); testing haha
+	//System.out.println(tokens[1]);
+	PreparedStatement pstmt = conn.prepareStatement(
+	"INSERT INTO manufacturer VALUES(?,?,?,?,?)");
+	pstmt.setString(1, tokens[0]);
+	pstmt.setString(2, tokens[1]);
+	pstmt.setString(3, tokens[2]);
+	pstmt.setString(4, tokens[3]);
+	pstmt.setString(5, tokens[4]);	
+	pstmt.executeUpdate();	
+	}
+	// part
+	while ((indata = inFile3.readLine()) != null)
+	{
+	String[] tokens = null;
+	tokens = indata.split("\t");
+	//System.out.print(tokens[0]+" "); testing haha
+	//System.out.println(tokens[1]);
+	PreparedStatement pstmt = conn.prepareStatement(
+	"INSERT INTO part VALUES(?,?,?,?,?,?)");
+	pstmt.setString(1, tokens[0]);
+	pstmt.setString(2, tokens[1]);
+	pstmt.setString(3, tokens[2]);
+	pstmt.setString(4, tokens[3]);
+	pstmt.setString(5, tokens[4]);
+	pstmt.setString(6, tokens[5]);	
+	pstmt.executeUpdate();	
+	}
+	// salesperson
+	while ((indata = inFile4.readLine()) != null)
+	{
+	String[] tokens = null;
+	tokens = indata.split("\t");
+	//System.out.print(tokens[0]+" "); testing haha
+	//System.out.println(tokens[1]);
+	PreparedStatement pstmt = conn.prepareStatement(
+	"INSERT INTO salesperson VALUES(?,?,?,?)");
+	pstmt.setString(1, tokens[0]);
+	pstmt.setString(2, tokens[1]);
+	pstmt.setString(3, tokens[2]);
+	pstmt.setString(4, tokens[3]);	
+	pstmt.executeUpdate();	
+	}		
+	// transaction
+	while ((indata = inFile5.readLine()) != null)
+	{
+	String[] tokens = null;
+	tokens = indata.split("\t");
+	//System.out.print(tokens[0]+" "); testing haha
+	//System.out.println(tokens[1]);
+	PreparedStatement pstmt = conn.prepareStatement(
+	"INSERT INTO transaction VALUES(?,?,?,to_date(?,'dd/mm/yyyy'))");
+	pstmt.setString(1, tokens[0]);
+	pstmt.setString(2, tokens[1]);
+	pstmt.setString(3, tokens[2]);
+	pstmt.setString(4, tokens[3]);	
+	pstmt.executeUpdate();	
+	}
+	conn.close();
+	System.out.print("Done! ");
+	System.out.println("Data is inputted to the database!");		
+	
 	}
 	catch(Exception e){
+	System.out.println("Failed! ");
+	System.out.println(e.getMessage());
+	System.out.println("Please check the input file");
+	
+	}
+	}
+	
+	//count the table
+	private static void countTable()
+	{
+	try
+	{
+	//connect first
+	Connection conn = DriverManager.getConnection(
+	"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
+	"d019",
+	"xysqchsz");
+	Statement stmt = conn.createStatement();
+	Statement stmt3 = conn.createStatement();
+	//find the table list
+	ResultSet dbList = stmt.executeQuery("SELECT * FROM cat");
+	ResultSet dbCheck = stmt3.executeQuery("SELECT * FROM cat");
+	boolean tableFlag = false;
+	if(dbCheck.next())
+	{
+	System.out.println("Number of records in each table:");
+	while(dbList.next())
+	{
+	Statement stmt2 = conn.createStatement();
+	String tableName = dbList.getString("TABLE_NAME");
+	ResultSet tableCount = stmt2.executeQuery("SELECT count(*) AS COUNT FROM "+tableName);
+	//while(tableCount.next()){
+	tableCount.next();
+	System.out.println(tableName+": "+tableCount.getInt("COUNT"));
+	//}
+	stmt2.close();
+	}
+	}
+	else
+	{
+	System.out.println("There is no table");
+	}
+	stmt.close();
+	conn.close();
+	}
+	catch(Exception e)
+	{
 	System.out.println(e.getMessage());
 	}
 	}
+	
 }

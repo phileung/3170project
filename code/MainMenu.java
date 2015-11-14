@@ -66,7 +66,7 @@ public class MainMenu
 	System.out.println("2. Operations for salesperson");
 	System.out.println("3. Operations for manager");
 	System.out.println("4. Exit this program");
-	System.out.print("Enter your Choice: ");
+	System.out.print("Enter Your Choice: ");
 	}	
 	
 	

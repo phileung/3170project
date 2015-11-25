@@ -33,7 +33,7 @@ public class MainMenu
 			{
 				SaleMenu SM = new SaleMenu();
 				SM.printMenu();
-				choiceFlag = false;
+				//choiceFlag = false;
 			}
 			else if(input.equals("3"))
 			{			

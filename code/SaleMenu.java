@@ -1,5 +1,6 @@
 import java.io.*;
 import java.sql.*;
+import java.util.Calendar;
 public class SaleMenu
 {
 	public static void printMenu()
@@ -42,7 +43,7 @@ public class SaleMenu
 			}
 			else if(input.equals("2"))
 			{
-
+				sell();
 			}
 
 			else if(input.equals("3"))
@@ -104,7 +105,7 @@ public class SaleMenu
 				catch(IOException e)
 				{
 				}
-				String searchBy = "WHERE pName LIKE '" + keyWord +"'";
+				String searchBy = "WHERE pName = '" + keyWord +"'";
 				executeSearch(searchBy);
 				SearchFlag = false;
 			}
@@ -120,7 +121,7 @@ public class SaleMenu
 				catch(IOException e)
 				{
 				}
-				String searchBy = "WHERE mName LIKE '" + keyWord +"'";
+				String searchBy = "WHERE mName = '" + keyWord +"'";
 				executeSearch(searchBy);
 				SearchFlag = false;
 			}
@@ -218,55 +219,120 @@ public class SaleMenu
 				System.out.println("Unable to search parts! Make sure you have create the database!");
 				System.exit(0);;
 			}
-			
-			
-
-
 		}
-
-
-		//count the table
-		private static void countTable()
+		private static void sell()
 		{
-			try
-			{
-				//connect first
-				Connection conn = DriverManager.getConnection(
-				"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
-				"d019",
-				"xysqchsz");
-				Statement stmt = conn.createStatement();
-				Statement stmt3 = conn.createStatement();
-				//find the table list
-				ResultSet dbList = stmt.executeQuery("SELECT * FROM cat");
-				ResultSet dbCheck = stmt3.executeQuery("SELECT * FROM cat");
-				boolean tableFlag = false;
-				if(dbCheck.next())
+				System.out.print("Enter The Part ID: ");
+				BufferedReader in_partID = new BufferedReader(new InputStreamReader(System.in));
+				String pid = null;
+				try
 				{
-					System.out.println("Number of records in each table:");
-					while(dbList.next())
-					{
-						Statement stmt2 = conn.createStatement();
-						String tableName = dbList.getString("TABLE_NAME");
-						ResultSet tableCount = stmt2.executeQuery("SELECT count(*) AS COUNT FROM "+tableName);
-						//while(tableCount.next()){
-						tableCount.next();
-						System.out.println(tableName+": "+tableCount.getInt("COUNT"));
-						//}
-						stmt2.close();
+					pid = in_partID.readLine();
+				}
+				catch(IOException e)
+				{
+					System.out.println(e.getMessage());
+				}
+				System.out.print("Enter the Salesperson ID: ");
+				BufferedReader in_saleID = new BufferedReader(new InputStreamReader(System.in));
+				String sid = null;
+				try
+				{
+					sid = in_saleID.readLine();
+				}
+				catch(IOException e)
+				{
+					System.out.println(e.getMessage());
+				}
+				try
+				{
+					Connection conn = DriverManager.getConnection(
+					"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
+					"d019",
+					"xysqchsz");
+					//check quantity of part
+					String sql = "SELECT * " + 
+								 "FROM part"+
+								 " WHERE pID = "+ pid;
+					//System.out.println(sql);			 
+					PreparedStatement pstmt = conn.prepareStatement(sql);
+					ResultSet rs = pstmt.executeQuery();
+					int NumOFPart = 0;
+					String NameOFPart = null;
+					if(rs.next()){
+						NumOFPart = rs.getInt("pAvailableQuantity");
+						NameOFPart = rs.getString("pName");
+							if (NumOFPart<=0){
+								System.out.println("Failed! The quantity of the part with part ID: " +" is 0");
+								return;
+							}
 					}
+					else
+					{
+						System.out.println("Failed! The part with part ID: " + pid+" does not exist");
+						return;
+					}
+					pstmt.close();
+					// check if sale exist
+							sql = "SELECT * " + 
+								 "FROM salesperson "+
+								 "WHERE sID = " + sid;
+					PreparedStatement pstmt2 = conn.prepareStatement(sql);
+					rs = pstmt2.executeQuery();					
+					if(!rs.next()){
+						System.out.println("Failed! The salesperson with salesperson ID: " +sid+" does not exist");
+						return;
+					}
+					pstmt2.close();
+					NumOFPart = NumOFPart - 1;
+					//System.out.println("checked every thing");
+					
+					//at this step, it is sure that part quantity > 0 and sales exist
+							sql = "UPDATE part " + 
+								 "SET pAvailableQuantity = " + NumOFPart+
+								 " WHERE pID = " + pid;				
+					Statement stmt = conn.createStatement();
+					stmt.executeUpdate(sql);
+					stmt.close();
+					Calendar Date = Calendar.getInstance();
+					Date.add(Calendar.MONTH,1);
+					String sellDate = Date.get(Calendar.DAY_OF_MONTH)+"/"+
+									  Date.get(Calendar.MONTH)+"/"+
+									  Date.get(Calendar.YEAR);
+					//find what transaction id should use
+							sql = "SELECT * " + 
+								 "FROM transaction"+
+								 " ORDER BY tID DESC";
+					PreparedStatement pstmt3 = conn.prepareStatement(sql);
+					rs = pstmt3.executeQuery();
+					int tranID = 1;
+					
+					if(rs.next())
+					{
+						tranID = rs.getInt("tID") + 1;
+					}
+					else
+					{
+						tranID = 1;
+					}
+					pstmt.close();
+					//System.out.println("ready for insert");
+					PreparedStatement pstmt4 = conn.prepareStatement(
+					"INSERT INTO transaction VALUES(?,?,?,to_date(?,'dd/mm/yyyy'))");
+					pstmt4.setString(1, String.valueOf(tranID));
+					pstmt4.setString(2, pid);
+					pstmt4.setString(3, sid);
+					pstmt4.setString(4, sellDate);	
+					pstmt4.executeUpdate();
+					pstmt4.close();
+					conn.close();
+					System.out.println("Product: "+NameOFPart+" (id: "+pid+") Remaining Quantity: "+NumOFPart);
 				}
-				else
+				catch(Exception e)
 				{
-					System.out.println("There is no table");
+					System.out.println(e.getMessage());
 				}
-				stmt.close();
-				conn.close();
-			}
-			catch(Exception e)
-			{
-				System.out.println(e.getMessage());
-			}
+				
 		}
 
 	}

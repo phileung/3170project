@@ -5,6 +5,22 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 
 public class ManaMenu {
+        public static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        public static Date askDate(BufferedReader in, String startEnd)
+        {
+                Date date = null;
+                while (date == null) {
+                        try {
+                                System.out.print("Type in the " + startEnd + " date [dd/mm/yyyy]: ");
+                                String inputDateStr = in.readLine();
+                                date = new Date(sdf.parse(inputDateStr).getTime());
+                        } catch (Exception e) {
+                                System.out.println("Invalid Date.");
+                        }
+                }
+                return date;
+        }
+    
 	public static void printMenu() {
 		Connection conn = null;
 		try {	
@@ -15,7 +31,6 @@ public class ManaMenu {
 			System.out.println("Unable to load the driver class!");
 			return;	
 		}
-	
 		try {
 			conn = DriverManager.getConnection(
 				"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
@@ -26,8 +41,7 @@ public class ManaMenu {
 			System.out.println(e.getMessage());
 			System.out.println("Unable to connect to the database! Check your network!");
 			System.exit(0);
-		}
-		 System.out.println("Done!");		 
+		}		
 		try {
 			printlog();
 			String input = "";
@@ -37,6 +51,7 @@ public class ManaMenu {
 			ResultSet rs;
 			while (choice < 1 || choice > 4) {
 				try {
+                                        System.out.print("Enter your Choice: ");
 					input = in.readLine();
 					choice = Integer.parseInt(input);
 					if (choice < 1 || choice > 4)
@@ -48,8 +63,6 @@ public class ManaMenu {
 			switch (choice) {
 			case 1:
 				int sID = 0;
-				String startDate = "", endDate = "";
-				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 				while (sID < 1) {
 					try {
 						System.out.print("Enter The Salesperson ID: ");
@@ -57,31 +70,24 @@ public class ManaMenu {
 						sID = Integer.parseInt(input);
 						if (sID < 1)
 							throw new NumberFormatException();
-					} catch (NumberFormatException e) {
+					} catch (Exception e) {
 						System.out.println("sID should be > 0.");
-					} catch (IOException e) {}
+                                        }
 				}
-				try {
-					System.out.print("Type in the starting date [dd/mm/yyyy]: ");
-					startDate = in.readLine();
-					
-				} catch (IOException e) {}
-				try {
-					System.out.print("Type in the ending date [dd/mm/yyyy]: ");
-					endDate = in.readLine();
-				} catch (IOException e) {}
+				Date startDate = askDate(in, "starting");
+                                Date endDate = askDate(in, "ending");
 				System.out.println("Transaction Record:\n" + 
 					"| ID | Part ID | Part Name | Manufacturer | Price | Date |");
 				PreparedStatement ps = conn.prepareStatement(
 					"SELECT t.tID, p.pID, p.pName, m.mName, p.pPrice, t.tDate " +
 					"FROM transaction t, part p, manufacturer m, salesperson s " +
-					"WHERE t.sID = ? AND to_date(?,'dd/mm/yyyy') <= t.tDate " +
-						"AND t.tDate <= to_date(?,'dd/mm/yyyy') " +
+                                        "WHERE t.sID = ? AND ? <= t.tDate " +
+                                                "AND t.tDate <= ? " +
 						"AND t.pID = p.pID AND p.mID = m.mID AND t.sID = s.sID " +
 						"ORDER BY t.tDate DESC");
 				ps.setInt(1, sID);
-				ps.setString(2, startDate);
-				ps.setString(3, endDate);
+				ps.setDate(2, startDate);
+				ps.setDate(3, endDate);
 				rs = ps.executeQuery();
 				while (rs.next()) {
 					System.out.println("| " + rs.getInt(1) + " | " +
@@ -90,6 +96,9 @@ public class ManaMenu {
 						sdf.format(new Date(rs.getDate(6).getTime())) + " |");
 				}
 				System.out.println("End of Query\n");
+                                ps.close();
+                                rs.close();
+                                conn.close();
 				break;
 			case 2:
 				System.out.println("| Manufacturer ID | Manufacturer Name " +
@@ -106,6 +115,9 @@ public class ManaMenu {
 						rs.getString(2) + " | " + rs.getInt(3) + " |");
 				}
 				System.out.println("End of Query\n");
+                                stmt.close();
+                                rs.close();
+                                conn.close();
 				break;
 			case 3:
 				int numOfParts = 0;
@@ -120,6 +132,7 @@ public class ManaMenu {
 						System.out.println("Number of parts should be > 0.");
 					} catch (IOException e) {}
 				}
+                                System.out.println("| Part ID | Part Name | No. of Transaction |");
 				stmt = conn.createStatement();
 				rs = stmt.executeQuery(
 					"SELECT p.pID, p.pName, COUNT(*) AS transCount " +
@@ -127,21 +140,26 @@ public class ManaMenu {
 					"WHERE p.pID = t.pID " +
 					"GROUP BY p.pID, p.pName " +
 					"ORDER BY transCount DESC");
-			        System.out.println("| Manufacturer ID | Manufacturer Name | Total Sales Value |");
-				    
 				for (; numOfParts > 0 && rs.next(); numOfParts--) {
 					System.out.println("| " + rs.getInt(1) + " | " +
 						rs.getString(2) + " | " + rs.getInt(3) + " |");
 				}
 				System.out.println("End of Query\n");
-				break;
+				stmt.close();
+                                rs.close();
+                                conn.close();
+                                break;
 			case 4:
-			
+                        
 			}
 		} catch (SQLException e) {
 			System.out.println("SQLException");
 			System.out.println(e);
 		}
+                try {
+                        conn.close();
+                } catch (SQLException e) {
+                }    
 	}
 	
 	private static void printlog() {
@@ -149,8 +167,7 @@ public class ManaMenu {
 		System.out.println("What kinds of operation would you like to perform?");
 		System.out.println("1. Show the sales record of a sales person within a period");
 		System.out.println("2. Show the total sales value of each manufacturer");
-		System.out.println("3. Show the N most popular part");
+		System.out.println("3. Show the N mowt popular part");
 		System.out.println("4. Return to the main Menu");
-		System.out.print("Enter your Choice: ");
 	}	
 }

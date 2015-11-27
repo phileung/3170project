@@ -15,6 +15,7 @@ public class ManaMenu {
 			System.out.println("Unable to load the driver class!");
 			return;	
 		}
+	
 		try {
 			conn = DriverManager.getConnection(
 				"jdbc:oracle:thin:@db12.cse.cuhk.edu.hk:1521:db12",
@@ -25,7 +26,8 @@ public class ManaMenu {
 			System.out.println(e.getMessage());
 			System.out.println("Unable to connect to the database! Check your network!");
 			System.exit(0);
-		}		
+		}
+		 System.out.println("Done!");		 
 		try {
 			printlog();
 			String input = "";
@@ -50,7 +52,7 @@ public class ManaMenu {
 				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 				while (sID < 1) {
 					try {
-						System.out.println("Enter The Salesperson ID: ");
+						System.out.print("Enter The Salesperson ID: ");
 						input = in.readLine();
 						sID = Integer.parseInt(input);
 						if (sID < 1)
@@ -125,6 +127,8 @@ public class ManaMenu {
 					"WHERE p.pID = t.pID " +
 					"GROUP BY p.pID, p.pName " +
 					"ORDER BY transCount DESC");
+			        System.out.println("| Manufacturer ID | Manufacturer Name | Total Sales Value |");
+				    
 				for (; numOfParts > 0 && rs.next(); numOfParts--) {
 					System.out.println("| " + rs.getInt(1) + " | " +
 						rs.getString(2) + " | " + rs.getInt(3) + " |");
@@ -145,7 +149,7 @@ public class ManaMenu {
 		System.out.println("What kinds of operation would you like to perform?");
 		System.out.println("1. Show the sales record of a sales person within a period");
 		System.out.println("2. Show the total sales value of each manufacturer");
-		System.out.println("3. Show the N mowt popular part");
+		System.out.println("3. Show the N most popular part");
 		System.out.println("4. Return to the main Menu");
 		System.out.print("Enter your Choice: ");
 	}	

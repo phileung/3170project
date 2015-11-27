@@ -39,7 +39,7 @@ public class MainMenu
 			{			
 				ManaMenu MM = new ManaMenu();
 				MM.printMenu();
-				choiceFlag = false;
+				//choiceFlag = false;
 			}
 			else if(input.equals("4"))
 			{	

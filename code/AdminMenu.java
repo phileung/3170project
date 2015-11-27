@@ -82,6 +82,7 @@ public class AdminMenu
 					"FOREIGN KEY (sID) REFERENCES salesperson (sID))");
 			System.out.print("Done! ");
 			System.out.println("Database is initialized!");
+			opFlag = false;
 			}
 			else if(input.equals("2"))
 			{
@@ -94,7 +95,7 @@ public class AdminMenu
 				execute("DROP TABLE category cascade constraints PURGE");
 			System.out.print("Done! ");
 			System.out.println("Database is removed!");				
-
+			opFlag = false;
 			}
 			else if(input.equals("3"))
 			{		
@@ -113,13 +114,14 @@ public class AdminMenu
 				
 				System.out.print("Processing...");
 				loadData(inPath);
-				
+				opFlag = false;
 			}
 			else if(input.equals("4"))
 			{	
 				//show numer
 				//System.out.println("show number");
 				countTable();
+				opFlag = false;
 			}
 			else if(input.equals("5"))
 			{

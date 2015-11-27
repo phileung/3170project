@@ -40,10 +40,12 @@ public class SaleMenu
 			if(input.equals("1"))
 			{
 				search();
+				opFlag = false;
 			}
 			else if(input.equals("2"))
 			{
 				sell();
+				opFlag = false;
 			}
 
 			else if(input.equals("3"))
@@ -105,7 +107,7 @@ public class SaleMenu
 				catch(IOException e)
 				{
 				}
-				String searchBy = "WHERE pName = '" + keyWord +"'";
+				String searchBy = "WHERE pName LIKE '%" + keyWord +"%'";
 				executeSearch(searchBy);
 				SearchFlag = false;
 			}
@@ -121,7 +123,7 @@ public class SaleMenu
 				catch(IOException e)
 				{
 				}
-				String searchBy = "WHERE mName = '" + keyWord +"'";
+				String searchBy = "WHERE mName LIKE '%" + keyWord +"%'";
 				executeSearch(searchBy);
 				SearchFlag = false;
 			}
@@ -211,6 +213,7 @@ public class SaleMenu
 								   
 				pstmt.close();
 				conn.close();
+				System.out.println("End of Query\n");
 			}
 			catch(Exception e)
 			{
